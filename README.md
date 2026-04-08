@@ -5,6 +5,15 @@ Este projeto consiste na estrutura de um software voltado à gestão hoteleira, 
 ## 📋 Sobre o Projeto
 A solução foi projetada com foco em modularidade, eficiência e segurança da informação. O sistema permite o controle de quartos e disponibilidade em tempo real, articulando-se com módulos financeiros e gerenciais para suporte à tomada de decisões no ambiente hoteleiro.
 
+### 🆕 Funcionalidades Implementadas (Versão Atual)
+O código atual já contempla as seguintes funcionalidades estruturais:
+* **Sistema de Login e Autenticação:** Acesso seguro com limite de tentativas de falha (máximo de 3 tentativas antes do bloqueio).
+* **Controle de Perfis de Usuário:** Uso de `structs` para gerenciamento de credenciais, dividindo o acesso em três níveis hierárquicos:
+  * *Recepção*
+  * *Administração*
+  * *Equipe de Limpeza*
+* **Navegação por Menus Direcionados:** Interfaces em console específicas para cada perfil logado, garantindo que cada usuário acesse apenas as opções pertinentes ao seu cargo.
+
 ### Principais Funcionalidades (Requisitos Funcionais)
 O sistema contempla as seguintes funcionalidades automáticas:
 * **Cadastro de Hóspedes (RF01):** Inserção, consulta e atualização dos dados cadastrais dos clientes.
