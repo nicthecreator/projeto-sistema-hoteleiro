@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> // Essa biblioteca serve para usar os structs e manipulação de strings
+#include <string.h>  // Essa biblioteca serve para usar os structs e manipulação de strings
 #include <windows.h> // Essa biblioteca é para usar a função Sleep, que é responsável por criar uma pausa no programa, deixando a experiência do usuário mais fluida
-
-
 
 // STRUCT DE LOGIN NO SISTEMA
 
@@ -18,7 +16,7 @@ pessoa p[5]; // diminuindo o nome da struct para "p" e o "[1]" é o máximo de p
 
 typedef struct
 {
-    char nome[30];
+    char nome[60];
     char dataDeNascimento[20];
     char cpf[20];
 } hospede;
@@ -44,7 +42,7 @@ void cadastroDeHospedes()
     printf("Data de Nascimento: %s\n", hosped[i].dataDeNascimento);
     printf("CPF: %s\n", hosped[i].cpf);
 
-    printf("Deseja adicionar outro hospede? Sim (1) / Não (2): ");
+    printf("\nDeseja adicionar outro hospede? Sim (1) / Não (2): ");
     scanf("%d", &adicionarNovoHospede);
 
     if (adicionarNovoHospede == 1)
@@ -70,7 +68,8 @@ void cadastroDeHospedes()
 
 void verificarHospedesCadastrados()
 {
-    printf("\nHospedes Cadastrados:\n");
+    printf("\nHospedes Cadastrados:\n\n");
+    printf("-------------------------\n");
     for (int j = 0; j < 20; j++)
     {
         if (strlen(hosped[j].nome) > 0)
@@ -97,14 +96,14 @@ void menuRecepcionista()
         int opcao;
         printf("\n==========================");
         printf("\n=== PAINEL DA RECEPCAO ===");
-        printf("\n==========================\n");
-        printf("1. Cadastro de Hospedes\n");
-        printf("2. Verificar Hospedes Cadastrados\n");
-        printf("3. Controle de Quartos\n");
-        printf("4. Verificar Reservas Feitas\n");
-        printf("5. Check-in\n");
-        printf("6. Check Out\n");
-        printf("Escolha uma opcao: ");
+        printf("\n==========================");
+        printf("\n1. Cadastro de Hospedes");
+        printf("\n2. Verificar Hospedes Cadastrados");
+        printf("\n3. Controle de Quartos");
+        printf("\n4. Verificar Reservas Feitas");
+        printf("\n5. Check-in");
+        printf("\n6. Check Out");
+        printf("\nEscolha uma opcao: ");
         scanf("%d", &opcao);
 
         switch (opcao)
@@ -165,7 +164,7 @@ void menuAuxiliarDeLimpeza()
     printf("\n3. ");
     printf("\n4. ");
     printf("\n5. ");
-    printf("Escolha uma opcao: ");
+    printf("\nEscolha uma opcao: ");
     int opcao;
 
     scanf("%d", &opcao);
@@ -181,10 +180,49 @@ void menuAuxiliarDeLimpeza()
     }
 }
 
+// MENU HOSPEDE
+
+void menuHospede() {
+    printf("\n=====================================");
+    printf("\n========= PAINEL DO HOSPEDE =========");
+    printf("\n=====================================");
+    printf("\n1. Consultar disponibilidade");
+    printf("\n2. Realizar Reserva");
+    printf("\n3. Check-in");
+    printf("\n4. Check-out");
+    printf("\n5. Realizar Pagamento (Ver boletos emitidos)");
+    printf("\n6. Visualizar notas fiscais");
+    printf("\nEscolha uma opcao: ");
+    int opcao;
+
+    scanf("%d", &opcao);
+
+    switch (opcao)
+    {
+    case 1:
+        /* code */
+        break;
+    case 2:
+        /* code */
+        break;
+    case 3:
+        /* code */
+        break;
+    case 4:
+        /* code */
+        break;
+    case 5:
+        /* code */
+        break;
+    
+    default:
+        break;
+    }
+}
+
 int main()
 {
     SetConsoleOutputCP(65001); // Essa função é para configurar o console para usar a codificação UTF-8, permitindo que caracteres acentuados sejam exibidos corretamente no console do Windows.
-
 
     // ====== SISTEMA DE LOGIN ======
 
@@ -204,6 +242,9 @@ int main()
     // Usuario da equipe de limpeza
     strcpy(p[2].login, "Limpeza");
     strcpy(p[2].senha, "limpeza123");
+    // Usuario Hospede
+    strcpy(p[3].login, "Hospede");
+    strcpy(p[3].senha, "hospede123");
 
     while (tentativas < 3 && logado == 0)
     {
@@ -238,6 +279,15 @@ int main()
             logado = 1;
             menuAuxiliarDeLimpeza();
         }
+        else if ((strcmp(login, p[3].login) == 0) && (strcmp(senha, p[3].senha) == 0))
+        {
+
+            // HOSPEDE LOGADO
+            printf("\nBem-vindo(a), Hospede!\n");
+            logado = 1;
+            menuHospede();
+        }
+
         else
         {
             tentativas++;
