@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> // Essa biblioteca serve para usar os structs e manipulação de strings
+#include <windows.h> // Essa biblioteca é para usar a função Sleep, que é responsável por criar uma pausa no programa, deixando a experiência do usuário mais fluida
+
+
 
 // STRUCT DE LOGIN NO SISTEMA
 
@@ -30,10 +33,10 @@ void cadastroDeHospedes()
     int adicionarNovoHospede = 0;
     printf("\nCadastro de Hospedes selecionado.\n");
     printf("\nInsira o nome do hospede: ");
-    scanf("%s", hosped[i].nome);
-    printf("\nInsira a data de nascimento do hospede(00/00/0000): ");
+    scanf(" %60[^\n]", hosped[i].nome);
+    printf("\nInsira a data de nascimento: ");
     scanf("%s", hosped[i].dataDeNascimento);
-    printf("\nInsira o CPF do hospede (000.000.000-00): ");
+    printf("\nInsira o CPF: ");
     scanf("%s", hosped[i].cpf);
 
     printf("\nInformacoes do hospede:\n");
@@ -180,6 +183,8 @@ void menuAuxiliarDeLimpeza()
 
 int main()
 {
+    SetConsoleOutputCP(65001); // Essa função é para configurar o console para usar a codificação UTF-8, permitindo que caracteres acentuados sejam exibidos corretamente no console do Windows.
+
 
     // ====== SISTEMA DE LOGIN ======
 
