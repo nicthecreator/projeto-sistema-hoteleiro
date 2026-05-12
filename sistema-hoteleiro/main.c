@@ -22,6 +22,39 @@ typedef struct
 } hospede;
 hospede hosped[20];
 
+// STRUCT DE QUARTO
+
+typedef struct 
+
+{
+    int numero;
+    char tipo[20];  // "solteiro", "casal", "suite"
+    float preco;
+    int disponivel;  // 1 = livre, 0 = ocupado;
+
+}quarto;
+
+// STRUCT DE RESERVA
+
+typedef struct
+{
+    int idreserva;
+    char cpfhospode[11];
+    int numeroquarto;
+    char datacheckin[20];  // formato dd/mm/aa
+    char datacheckout[20];
+    int status;  // 0 = reservado, 1 = checkin feito, 2 = checkout feito
+
+}reserva;
+
+// DECLARAÇÃO GLOBAL
+
+quarto quartos[30];  // ate 30 quartos
+reserva reservas[50];  // ate 50 reservas
+int totalreservas = 0;
+
+//inicializa os 30 quartos com números, tipos e preços
+
 // ========== FUNÇÕES DA RECEPÇÃO ==========
 
 // FUNÇÃO DE CADASTRO DE HOSPEDES
