@@ -24,36 +24,34 @@ hospede hosped[20];
 
 // STRUCT DE QUARTO
 
-typedef struct 
+typedef struct
 
 {
     int numero;
-    char tipo[20];  // "solteiro", "casal", "suite"
+    char tipo[20]; // "solteiro", "casal", "suite"
     float preco;
-    int disponivel;  // 1 = livre, 0 = ocupado;
+    int disponivel; // 1 = livre, 0 = ocupado;
 
-}quarto;
+} quarto;
+quarto quartos[30];
 
 // STRUCT DE RESERVA
 
-typedef struct
-{
-    int idreserva;
-    char cpfhospode[11];
-    int numeroquarto;
-    char datacheckin[20];  // formato dd/mm/aa
-    char datacheckout[20];
-    int status;  // 0 = reservado, 1 = checkin feito, 2 = checkout feito
+typedef struct {
+    int idReserva;
+    char cpfHospede[20];
+    int numeroQuarto;
+    char dataCheckIn[11];
+    char dataCheckOut[11];
+    int status;        // 0 = reservado, 1 = check‑in feito, 2 = check‑out feito
+} reserva;
+reserva reservas[50];
 
-}reserva;
 
 // DECLARAÇÃO GLOBAL
-
-quarto quartos[30];  // ate 30 quartos
-reserva reservas[50];  // ate 50 reservas
 int totalreservas = 0;
 
-//inicializa os 30 quartos com números, tipos e preços
+//==================== FUNÇÕES ====================
 
 // ========== FUNÇÕES DA RECEPÇÃO ==========
 
@@ -120,6 +118,188 @@ void verificarHospedesCadastrados()
     }
 }
 
+// FUNÇÃO DE CONTROLE DE QUARTOS
+
+void controleDeQuartos()
+{
+    for (int i = 0; i < 30; i++) // inicializa os 30 quartos com números, tipos e preços
+{
+    quartos[i].numero = i + 1;
+    quartos[i].disponivel = 1; // todos livres no início
+    if (i < 10)
+    {
+        strcpy(quartos[i].tipo, "Solteiro");
+        quartos[i].preco = 120.0;
+    }
+    else if (i < 20)
+    {
+        strcpy(quartos[i].tipo, "Duplo");
+        quartos[i].preco = 180.0;
+    }
+    else
+    {
+        strcpy(quartos[i].tipo, "Suite");
+        quartos[i].preco = 350.0;
+    }
+}
+
+    int opcao;
+    printf("\n===========================");
+    printf("\n=== CONTROLE DE QUARTOS ===");
+    printf("\n===========================\n");
+    printf("1. Listar todos os quartos\n");
+    printf("2. Ver apenas quartos disponiveis\n");
+    printf("3. Alterar disponibilidade manualmente\n");
+    printf("Escolha: ");
+    scanf("%d", &opcao);
+
+    if (opcao == 1)
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            printf("Quarto %d - %s - R$%.2f - %s\n",
+                quartos[i].numero,
+                quartos[i].tipo,
+                quartos[i].preco,
+                quartos[i].disponivel ? "\033[0;32mDISPONIVEL\033[0m\n" : "OCUPADO");
+        }
+    }
+    else if (opcao == 2)
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            if (quartos[i].disponivel)
+                printf("Quarto %d - %s - R$%.2f\n",
+                    quartos[i].numero, quartos[i].tipo, quartos[i].preco);
+        }
+    }
+    else if (opcao == 3)
+    {
+        int num, disp;
+        printf("Numero do quarto: ");
+        scanf("%d", &num);
+        if (num >= 1 && num <= 30)
+        {
+            printf("Novo status (1=disponivel, 0=ocupado): ");
+            scanf("%d", &disp);
+            quartos[num - 1].disponivel = disp;
+            printf("Status alterado.\n");
+        }
+        else
+        {
+            printf("Quarto invalido.\n");
+        }
+    }
+} 
+
+// FUNÇÃO DE VERIFICAR RESERVAS FEITAS
+
+void fazerReserva() {
+    if (totalreservas >= 50) {
+        printf("Limite de reservas atingido!\n");
+        return;
+    }
+    reserva nova;
+    nova.idReserva = totalreservas + 1;
+    printf("\n--- NOVA RESERVA ---\n");
+    printf("CPF do hospede: ");
+    scanf("%s", nova.cpfHospede);
+    // Verifica se o CPF existe em hosped[] (opcional)
+    printf("Numero do quarto desejado: ");
+    scanf("%d", &nova.numeroQuarto);
+    if (nova.numeroQuarto < 1 || nova.numeroQuarto > 30 || quartos[nova.numeroQuarto-1].disponivel == 0) {
+        printf("Quarto invalido ou ocupado. Reserva nao concluida.\n");
+        return;
+    }
+    printf("Data de check-in (DD/MM/AAAA): ");
+    scanf("%s", nova.dataCheckIn);
+    printf("Data de check-out (DD/MM/AAAA): ");
+    scanf("%s", nova.dataCheckOut);
+    nova.status = 0;  // reservado
+    reservas[totalreservas] = nova;
+    totalreservas++;
+    printf("Reserva criada com sucesso! ID: %d\n", nova.idReserva);
+}
+
+// FUNÇÃO DE VERIFICAR RESERVAS FEITAS
+
+void verificarReservas() {
+    printf("\n--- RESERVAS ATIVAS (status reservado) ---\n");
+    int encontrou = 0;
+    for (int i = 0; i < totalreservas; i++) {
+        if (reservas[i].status == 0) {
+            printf("Reserva ID: %d\n", reservas[i].idReserva);
+            printf("CPF Hospede: %s\n", reservas[i].cpfHospede);
+            printf("Quarto: %d\n", reservas[i].numeroQuarto);
+            printf("Check-in: %s   Check-out: %s\n", reservas[i].dataCheckIn, reservas[i].dataCheckOut);
+            printf("------------------------\n");
+            encontrou = 1;
+        }
+    }
+    if (!encontrou)
+        printf("Nenhuma reserva ativa.\n");
+}
+
+// FUNÇÃO DE CHECK-IN
+
+void fazerCheckIn() {
+    char cpf[20];
+    int idReserva;
+    printf("\n--- CHECK-IN ---\n");
+    printf("Digite o CPF do hospede: ");
+    scanf("%s", cpf);
+    printf("Digite o ID da reserva: ");
+    scanf("%d", &idReserva);
+
+    for (int i = 0; i < totalreservas; i++) {
+        if (reservas[i].status == 0 && 
+            strcmp(reservas[i].cpfHospede, cpf) == 0 && 
+            reservas[i].idReserva == idReserva) {
+            
+            int numQuarto = reservas[i].numeroQuarto;
+            if (quartos[numQuarto-1].disponivel == 1) {
+                quartos[numQuarto-1].disponivel = 0;
+                reservas[i].status = 1;   // check-in realizado
+                printf("Check-in realizado com sucesso! Quarto %d agora esta ocupado.\n", numQuarto);
+            } else {
+                printf("Erro: Quarto ja esta ocupado!\n");
+            }
+            return;
+        }
+    }
+    printf("Reserva nao encontrada ou ja finalizada.\n");
+}
+
+// FUNÇÃO DE CHECK-OUT
+
+void fazerCheckOut() {
+    int numQuarto;
+    printf("\n--- CHECK-OUT ---\n");
+    printf("Numero do quarto: ");
+    scanf("%d", &numQuarto);
+    if (numQuarto < 1 || numQuarto > 30) {
+        printf("Quarto invalido.\n");
+        return;
+    }
+    if (quartos[numQuarto-1].disponivel == 0) {
+        quartos[numQuarto-1].disponivel = 1;
+        // Atualiza a reserva correspondente para status 2 (check-out)
+        for (int i = 0; i < totalreservas; i++) {
+            if (reservas[i].numeroQuarto == numQuarto && reservas[i].status == 1) {
+                reservas[i].status = 2;
+                break;
+            }
+        }
+        printf("Check-out realizado. Quarto %d agora esta disponivel.\n", numQuarto);
+    } else {
+        printf("Quarto ja esta disponivel (nao ha hospede).\n");
+    }
+}
+
+
+
+// ==================== MENUS ====================
+
 // MENU RECEPCIONISTA
 
 void menuRecepcionista()
@@ -133,9 +313,10 @@ void menuRecepcionista()
         printf("\n1. Cadastro de Hospedes");
         printf("\n2. Verificar Hospedes Cadastrados");
         printf("\n3. Controle de Quartos");
-        printf("\n4. Verificar Reservas Feitas");
-        printf("\n5. Check-in");
-        printf("\n6. Check Out");
+        printf("\n4. Fazer Reserva");
+        printf("\n5. Verificar Reservas Feitas");
+        printf("\n6. Check-in");
+        printf("\n7. Check Out");
         printf("\nEscolha uma opcao: ");
         scanf("%d", &opcao);
 
@@ -144,13 +325,26 @@ void menuRecepcionista()
         case 1:
             cadastroDeHospedes();
             break;
-
         case 2:
             verificarHospedesCadastrados();
             break;
-
+        case 3:
+            controleDeQuartos();
+            break;
+        case 4:
+            fazerReserva();
+            break;
+        case 5:
+            verificarReservas();
+            break;
+        case 6:
+            fazerCheckIn();
+            break;
+        case 7:   // opção extra para criar reservas
+            fazerCheckOut();
+            break;
         default:
-            printf("Numero invalido, tente novamente.");
+            printf("Numero invalido, tente novamente.\n");
             break;
         }
 
@@ -215,7 +409,8 @@ void menuAuxiliarDeLimpeza()
 
 // MENU HOSPEDE
 
-void menuHospede() {
+void menuHospede()
+{
     printf("\n=====================================");
     printf("\n========= PAINEL DO HOSPEDE =========");
     printf("\n=====================================");
@@ -247,11 +442,13 @@ void menuHospede() {
     case 5:
         /* code */
         break;
-    
+
     default:
         break;
     }
 }
+
+// ========== FUNÇÃO PRINCIPAL (MAIN) ==========
 
 int main()
 {
@@ -267,17 +464,17 @@ int main()
 
     //   ====== USUARIOS ======
     // Usuario da recepcao
-    strcpy(p[0].login, "Recepcionista");
-    strcpy(p[0].senha, "recepcao123");
+    strcpy(p[0].login, "r");
+    strcpy(p[0].senha, "r");
     // Usuario da administracao
-    strcpy(p[1].login, "Admin");
-    strcpy(p[1].senha, "admin123");
+    strcpy(p[1].login, "a");
+    strcpy(p[1].senha, "a");
     // Usuario da equipe de limpeza
-    strcpy(p[2].login, "Limpeza");
-    strcpy(p[2].senha, "limpeza123");
+    strcpy(p[2].login, "l");
+    strcpy(p[2].senha, "l");
     // Usuario Hospede
-    strcpy(p[3].login, "Hospede");
-    strcpy(p[3].senha, "hospede123");
+    strcpy(p[3].login, "h");
+    strcpy(p[3].senha, "h");
 
     while (tentativas < 3 && logado == 0)
     {
