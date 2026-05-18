@@ -5,6 +5,7 @@
 
 // DECLARAÇÃO GLOBAL
 int totalreservas = 0;
+int totalHospedes = 0;
 
 // STRUCT DE LOGIN NO SISTEMA
 
@@ -145,46 +146,47 @@ void sistemaDeLogin()
         }
     }
 }
+
+// Inicializa os quartos com números, tipos e preços
+void inicializarSistema() {
+    for (int i = 0; i < 30; i++) {
+        quartos[i].numero = i + 1;
+        quartos[i].disponivel = 1;
+        if (i < 10) { strcpy(quartos[i].tipo, "Solteiro"); quartos[i].preco = 120.0; }
+        else if (i < 20) { strcpy(quartos[i].tipo, "Duplo"); quartos[i].preco = 180.0; }
+        else { strcpy(quartos[i].tipo, "Suite"); quartos[i].preco = 350.0; }
+        
+        quartos2[i].numero = i + 1;
+        strcpy(quartos2[i].status, "DISPONIVEL");
+        strcpy(quartos2[i].tipo, quartos[i].tipo);
+    }
+}
+
 // ========== FUNÇÕES DA RECEPÇÃO ==========
 
 // FUNÇÃO DE CADASTRO DE HOSPEDES
-void cadastroDeHospedes()
-{
-    static int i = 0;
-    int adicionarNovoHospede = 0;
-    printf("\nCadastro de Hospedes selecionado.\n");
-    printf("\nInsira o nome do hospede: ");
-    scanf(" %60[^\n]", hosped[i].nome);
-    printf("\nInsira a data de nascimento: ");
-    scanf("%s", hosped[i].dataDeNascimento);
-    printf("\nInsira o CPF: ");
-    scanf("%s", hosped[i].cpf);
-
-    printf("\nInformacoes do hospede:\n");
-    printf("Nome: %s\n", hosped[i].nome);
-    printf("Data de Nascimento: %s\n", hosped[i].dataDeNascimento);
-    printf("CPF: %s\n", hosped[i].cpf);
-
-    printf("\nDeseja adicionar outro hospede? Sim (1) / Não (2): ");
-    scanf("%d", &adicionarNovoHospede);
-
-    if (adicionarNovoHospede == 1)
-    {
-        i++;
-        if (i < 20)
-        {
-            cadastroDeHospedes();
-        }
-        else
-        {
+void cadastroDeHospedes() {
+    int adicionarNovoHospede;
+    do {
+        if (totalHospedes >= 20) {
             printf("Limite de hospedes atingido!\n");
-            i = 0;
+            break;
         }
-    }
-    else
-    {
-        i = 0;
-    }
+        
+        printf("\nCadastro de Hospedes selecionado.\n");
+        printf("\nInsira o nome do hospede: ");
+        scanf(" %60[^\n]", hosped[totalHospedes].nome);
+        printf("\nInsira a data de nascimento: ");
+        scanf("%s", hosped[totalHospedes].dataDeNascimento);
+        printf("\nInsira o CPF: ");
+        scanf("%s", hosped[totalHospedes].cpf);
+
+        totalHospedes++;
+
+        printf("\nDeseja adicionar outro hospede? Sim (1) / Nao (2): ");
+        scanf("%d", &adicionarNovoHospede);
+        
+    } while (adicionarNovoHospede == 1);
 }
 
 // FUNÇÃO DE VERIFICAR HOSPEDES CADASTRADOS
@@ -214,27 +216,6 @@ void verificarHospedesCadastrados()
 
 void controleDeQuartos()
 {
-    for (int i = 0; i < 30; i++) // inicializa os 30 quartos com números, tipos e preços
-    {
-        quartos[i].numero = i + 1;
-        quartos[i].disponivel = 1; // todos livres no início
-        if (i < 10)
-        {
-            strcpy(quartos[i].tipo, "Solteiro");
-            quartos[i].preco = 120.0;
-        }
-        else if (i < 20)
-        {
-            strcpy(quartos[i].tipo, "Duplo");
-            quartos[i].preco = 180.0;
-        }
-        else
-        {
-            strcpy(quartos[i].tipo, "Suite");
-            quartos[i].preco = 350.0;
-        }
-    }
-
     int opcao;
     printf("\n===========================");
     printf("\n=== CONTROLE DE QUARTOS ===");
@@ -420,7 +401,7 @@ void iniciarQuartos()
         quartos2[i].numero = i + 1;
 
         // Todos começam disponiveis
-        strcpy(quartos2[i].status, "DISPONIVEL");
+        strcpy(quartos2[i].status, "\033[0;32mDISPONIVEL\033[0m");
 
         // Define o tipo do quarto
         if (i < 10)
@@ -460,7 +441,7 @@ void atualizarStatusQuarto()
     int numero;
     int opcao;
 
-    printf("\nNumero do quarto: ");
+    printf("\nNumero do quarto: (1 a 10 Solteiros, 11 a 20 Duplos, 21 a 30 Suites): ");
     scanf("%d", &numero);
 
     // Verifica se o quarto existe
@@ -472,7 +453,7 @@ void atualizarStatusQuarto()
 
     printf("\n1. DISPONIVEL");
     printf("\n2. EM MANUTENCAO");
-    printf("\n3. INDISPONIVEL");
+    printf("\n3. OCUPADO");
     printf("\n4. EM LIMPEZA");
     printf("\nEscolha: ");
 
@@ -481,19 +462,19 @@ void atualizarStatusQuarto()
     // Atualiza o status
     if (opcao == 1)
     {
-        strcpy(quartos2[numero - 1].status, "DISPONIVEL");
+        strcpy(quartos2[numero - 1].status, "\033[0;32mDISPONIVEL\033[0m");
     }
     else if (opcao == 2)
     {
-        strcpy(quartos2[numero - 1].status, "EM MANUTENCAO");
+        strcpy(quartos2[numero - 1].status, "\033[0;34mEM MANUTENCAO\033[0m");
     }
     else if (opcao == 3)
     {
-        strcpy(quartos2[numero - 1].status, "INDISPONIVEL");
+        strcpy(quartos2[numero - 1].status, "\033[0;31mOCUPADO\033[0m");
     }
     else if (opcao == 4)
     {
-        strcpy(quartos2[numero - 1].status, "EM LIMPEZA");
+        strcpy(quartos2[numero - 1].status, "\033[0;33mEM LIMPEZA\033[0m");
     }
     else
     {
@@ -553,8 +534,7 @@ void menuRecepcionista()
             fazerCheckOut();
             break;
         case 8:
-            sistemaDeLogin();
-            break;
+            return;
         default:
             printf("Numero invalido, tente novamente.\n");
             break;
@@ -602,8 +582,7 @@ void menuAdministrador()
             break;
 
         case 5:
-            sistemaDeLogin();
-            break;
+            return;
 
         default:
             printf("Numero invalido, tente novamente.\n");
@@ -633,15 +612,13 @@ void menuAuxiliarDeLimpeza()
         switch (opcao)
         {
         case 1:
-            iniciarQuartos();
             listarQuartos();
             break;
         case 2:
             atualizarStatusQuarto();
             break;
         case 3:
-            sistemaDeLogin();
-            break;
+            return;
         default:
             printf("Numero invalido, tente novamente.\n");
             break;
@@ -689,8 +666,7 @@ void menuHospede()
         /* code */
         break;
     case 7:
-        sistemaDeLogin();
-        break;
+        return;
 
     default:
         break;
@@ -703,8 +679,15 @@ int main()
 {
     SetConsoleOutputCP(65001); // Essa função é para configurar o console para usar a codificação UTF-8
 
+    // Chamando a função para inicializar os quartos do hotel, para que eles já estejam prontos para serem usados quando o usuário fizer login
+    inicializarSistema();
+    
     // Puxando a função do SISTEMA DE LOGIN para o início do programa, para que o usuário seja direcionado para a tela de login assim que abrir o programa
     sistemaDeLogin();
+
+    while(1) {
+        sistemaDeLogin(); // Loop infinito mantendo o programa vivo
+    }
 
     return 0;
 }
