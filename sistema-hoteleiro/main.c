@@ -356,27 +356,49 @@ void menuRecepcionista()
 void menuAdministrador()
 {
     int opcao;
-    printf("\n===============================");
-    printf("\n=== PAINEL DO ADMINISTRADOR ===");
-    printf("\n===============================");
-    printf("\n1. ");
-    printf("\n2. ");
-    printf("\n3. ");
-    printf("\n4. ");
-    printf("\n5. ");
-    printf("\nEscolha uma opcao: ");
 
-    scanf("%d", &opcao);
-
-    switch (opcao)
+    do
     {
-    case 1:
-        /* code */
-        break;
+        printf("\n===============================");
+        printf("\n=== PAINEL DO ADMINISTRADOR ===");
+        printf("\n===============================");
+        printf("\n1. Relatorio de Hospedes");
+        printf("\n2. Buscar Hospede por CPF");
+        printf("\n3. Remover Hospede");
+        printf("\n4. Verificar Hospedes");
+        printf("\n5. Voltar ao Login");
+        printf("\nEscolha uma opcao: ");
 
-    default:
-        break;
-    }
+        scanf("%d", &opcao);
+
+        switch (opcao)
+        {
+        case 1:
+            relatorioHospedes();
+            break;
+
+        case 2:
+            buscarHospedeCPF();
+            break;
+
+        case 3:
+            removerHospede();
+            break;
+
+        case 4:
+            verificarHospedesCadastrados();
+            break;
+
+        case 5:
+            printf("\nVoltando ao painel de login...\n");
+            return;
+
+        default:
+            printf("\nOpcao invalida!\n");
+            break;
+        }
+
+    } while (1);
 }
 
 // MENU AUXILIAR DE LIMPEZA
