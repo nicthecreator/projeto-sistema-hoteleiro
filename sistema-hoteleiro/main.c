@@ -374,7 +374,7 @@ void menuAdministrador()
         switch (opcao)
         {
         case 1:
-            relatorioHospedes();
+            RelatorioHospedes();
             break;
 
         case 2:
