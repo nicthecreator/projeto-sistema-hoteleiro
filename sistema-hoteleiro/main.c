@@ -63,6 +63,88 @@ reserva reservas[50];
 
 //==================== FUNÇÕES ====================
 
+// FUNÇÃO DE LOGIN
+
+void sistemaDeLogin()
+{
+    // Declaração da Função de Login
+    char login[30]; // responsável por armazenar a senha inserida pelo usuário
+    char senha[30];
+
+    int tentativas = 0;
+    int logado = 0;
+
+    //   ====== USUARIOS ======
+    // Usuario da recepcao
+    strcpy(p[0].login, "r");
+    strcpy(p[0].senha, "r");
+    // Usuario da administracao
+    strcpy(p[1].login, "a");
+    strcpy(p[1].senha, "a");
+    // Usuario da equipe de limpeza
+    strcpy(p[2].login, "l");
+    strcpy(p[2].senha, "l");
+    // Usuario Hospede
+    strcpy(p[3].login, "h");
+    strcpy(p[3].senha, "h");
+
+    while (tentativas < 3 && logado == 0)
+    {
+        printf("\n===================================");
+        printf("\n=== SISTEMA DE GESTAO HOTELEIRA ===");
+        printf("\n===================================");
+        printf("\nLogin: ");
+        scanf("%s", login); // armazenando os dados inseridos pelo usuário para o vetor login que está dentro da função main
+        printf("\nSenha: ");
+        scanf("%s", senha);
+
+        if ((strcmp(login, p[0].login) == 0) && (strcmp(senha, p[0].senha) == 0))
+        { // A função strcmp é responsável por comparar string com string
+            // RECEPCIONISTA LOGADO
+            printf("\nBem-vindo(a), Recepcionista!\n");
+            logado = 1;
+            menuRecepcionista();
+        }
+        else if ((strcmp(login, p[1].login) == 0) && (strcmp(senha, p[1].senha) == 0))
+        {
+
+            // ADMIN LOGADO
+            printf("\nBem-vindo(a), Administrador!\n");
+            logado = 1;
+            menuAdministrador();
+        }
+        else if ((strcmp(login, p[2].login) == 0) && (strcmp(senha, p[2].senha) == 0))
+        {
+
+            // EQUIPE DE LIMPEZA LOGADO
+            printf("\nBem-vindo(a), Auxiliar de limpeza!\n");
+            logado = 1;
+            menuAuxiliarDeLimpeza();
+        }
+        else if ((strcmp(login, p[3].login) == 0) && (strcmp(senha, p[3].senha) == 0))
+        {
+
+            // HOSPEDE LOGADO
+            printf("\nBem-vindo(a), Hospede!\n");
+            logado = 1;
+            menuHospede();
+        }
+
+        else
+        {
+            tentativas++;
+            printf("\nErro: Credenciais incorretas.\n");
+            if (tentativas < 3)
+            {
+                printf("Voce tem mais %d tentativa(s).\n", 3 - tentativas);
+            }
+            else
+            {
+                printf("Acesso bloqueado por seguranca!\n");
+            }
+        }
+    }
+}
 // ========== FUNÇÕES DA RECEPÇÃO ==========
 
 // FUNÇÃO DE CADASTRO DE HOSPEDES
@@ -151,7 +233,7 @@ void controleDeQuartos()
             strcpy(quartos[i].tipo, "Suite");
             quartos[i].preco = 350.0;
         }
-    } 
+    }
 
     int opcao;
     printf("\n===========================");
@@ -200,7 +282,7 @@ void controleDeQuartos()
             printf("Quarto invalido.\n");
         }
     }
-}  
+}
 
 // FUNÇÃO DE VERIFICAR RESERVAS FEITAS
 
@@ -323,7 +405,7 @@ void fazerCheckOut()
     {
         printf("Quarto ja esta disponivel (nao ha hospede).\n");
     }
-} 
+}
 
 // ========== FUNÇÕES DA ADMINISTRAÇÃO ==========
 
@@ -443,6 +525,7 @@ void menuRecepcionista()
         printf("\n5. Verificar Reservas Feitas");
         printf("\n6. Check-in");
         printf("\n7. Check Out");
+        printf("\n8. Sair");
         printf("\nEscolha uma opcao: ");
         scanf("%d", &opcao);
 
@@ -469,6 +552,9 @@ void menuRecepcionista()
         case 7:
             fazerCheckOut();
             break;
+        case 8:
+            sistemaDeLogin();
+            break;
         default:
             printf("Numero invalido, tente novamente.\n");
             break;
@@ -492,6 +578,7 @@ void menuAdministrador()
         printf("\n2. Buscar Hospede por CPF");
         printf("\n3. Remover Hospede");
         printf("\n4. Verificar Hospedes");
+        printf("\n5. Sair");
         printf("\nEscolha uma opcao: ");
 
         scanf("%d", &opcao);
@@ -515,7 +602,7 @@ void menuAdministrador()
             break;
 
         case 5:
-
+            sistemaDeLogin();
             break;
 
         default:
@@ -538,6 +625,7 @@ void menuAuxiliarDeLimpeza()
         printf("\n=====================================\n");
         printf("1. Listar quartos\n");
         printf("2. Atualizar status do quarto\n");
+        printf("3. Sair\n");
         printf("\nEscolha uma opcao: ");
 
         scanf("%d", &opcao);
@@ -550,6 +638,9 @@ void menuAuxiliarDeLimpeza()
             break;
         case 2:
             atualizarStatusQuarto();
+            break;
+        case 3:
+            sistemaDeLogin();
             break;
         default:
             printf("Numero invalido, tente novamente.\n");
@@ -571,6 +662,7 @@ void menuHospede()
     printf("\n4. Check-out");
     printf("\n5. Realizar Pagamento (Ver boletos emitidos)");
     printf("\n6. Visualizar notas fiscais");
+    printf("\n7. Sair");
     printf("\nEscolha uma opcao: ");
     int opcao;
 
@@ -593,6 +685,12 @@ void menuHospede()
     case 5:
         /* code */
         break;
+    case 6:
+        /* code */
+        break;
+    case 7:
+        sistemaDeLogin();
+        break;
 
     default:
         break;
@@ -603,86 +701,10 @@ void menuHospede()
 
 int main()
 {
-    SetConsoleOutputCP(65001); // Essa função é para configurar o console para usar a codificação UTF-8, permitindo que caracteres acentuados sejam exibidos corretamente no console do Windows.
+    SetConsoleOutputCP(65001); // Essa função é para configurar o console para usar a codificação UTF-8
 
-    // ====== SISTEMA DE LOGIN ======
-
-    char login[30]; // responsável por armazenar a senha inserida pelo usuário
-    char senha[30];
-
-    int tentativas = 0;
-    int logado = 0;
-
-    //   ====== USUARIOS ======
-    // Usuario da recepcao
-    strcpy(p[0].login, "r");
-    strcpy(p[0].senha, "r");
-    // Usuario da administracao
-    strcpy(p[1].login, "a");
-    strcpy(p[1].senha, "a");
-    // Usuario da equipe de limpeza
-    strcpy(p[2].login, "l");
-    strcpy(p[2].senha, "l");
-    // Usuario Hospede
-    strcpy(p[3].login, "h");
-    strcpy(p[3].senha, "h");
-
-    while (tentativas < 3 && logado == 0)
-    {
-        printf("\n===================================");
-        printf("\n=== SISTEMA DE GESTAO HOTELEIRA ===");
-        printf("\n===================================");
-        printf("\nLogin: ");
-        scanf("%s", login); // armazenando os dados inseridos pelo usuário para o vetor login que está dentro da função main
-        printf("\nSenha: ");
-        scanf("%s", senha);
-
-        if ((strcmp(login, p[0].login) == 0) && (strcmp(senha, p[0].senha) == 0))
-        { // A função strcmp é responsável por comparar string com string
-            // RECEPCIONISTA LOGADO
-            printf("\nBem-vindo(a), Recepcionista!\n");
-            logado = 1;
-            menuRecepcionista();
-        }
-        else if ((strcmp(login, p[1].login) == 0) && (strcmp(senha, p[1].senha) == 0))
-        {
-
-            // ADMIN LOGADO
-            printf("\nBem-vindo(a), Administrador!\n");
-            logado = 1;
-            menuAdministrador();
-        }
-        else if ((strcmp(login, p[2].login) == 0) && (strcmp(senha, p[2].senha) == 0))
-        {
-
-            // EQUIPE DE LIMPEZA LOGADO
-            printf("\nBem-vindo(a), Auxiliar de limpeza!\n");
-            logado = 1;
-            menuAuxiliarDeLimpeza();
-        }
-        else if ((strcmp(login, p[3].login) == 0) && (strcmp(senha, p[3].senha) == 0))
-        {
-
-            // HOSPEDE LOGADO
-            printf("\nBem-vindo(a), Hospede!\n");
-            logado = 1;
-            menuHospede();
-        }
-
-        else
-        {
-            tentativas++;
-            printf("\nErro: Credenciais incorretas.\n");
-            if (tentativas < 3)
-            {
-                printf("Voce tem mais %d tentativa(s).\n", 3 - tentativas);
-            }
-            else
-            {
-                printf("Acesso bloqueado por seguranca!\n");
-            }
-        }
-    }
+    // Puxando a função do SISTEMA DE LOGIN para o início do programa, para que o usuário seja direcionado para a tela de login assim que abrir o programa
+    sistemaDeLogin();
 
     return 0;
 }
