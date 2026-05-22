@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>  // Essa biblioteca serve para usar os structs e manipulação de strings
-#include <windows.h> // Essa biblioteca é para usar a função Sleep, que é responsável por criar uma pausa no programa, deixando a experiência do usuário mais fluida
+#include <string.h> // Essa biblioteca serve para usar os structs e manipulação de strings
+#include <windows.h>
+#include <ctype.h>
+#include <time.h> // Para capturar a data atual
 
 // DECLARAÇÃO GLOBAL
 int totalreservas = 0;
@@ -50,6 +52,9 @@ typedef struct
 reserva reservas[50];
 
 //==================== FUNÇÕES ====================
+
+// FUNÇÕES DO SISTEMA
+
 
 // FUNÇÃO DE LOGIN
 
@@ -162,26 +167,131 @@ void iniciarQuartos()
     }
 }
 
+// FUNÇÕES DE MANIPULAÇÃO DE ARQUIVO (PERSISTÊNCIA)
+
+    // Função para SALVAR os hóspedes no arquivo
+void salvarHospedes() {
+    // Abre (ou cria) um arquivo chamado "hospedes.dat" no modo "wb" (Write Binary - Escrita Binária)
+    FILE *arquivo = fopen("hospedes.dat", "wb"); 
+    
+    if (arquivo != NULL) {
+        // Escreve os dados do vetor 'hosped' no arquivo
+        // fwrite(de onde vem, tamanho de cada item, quantos itens, para onde vai)
+        fwrite(hosped, sizeof(hospede), totalHospedes, arquivo);
+        fclose(arquivo); // Sempre feche o arquivo após usar!
+    } else {
+        printf("\nErro ao tentar salvar os dados dos hospedes no disco!\n");
+    }
+}
+
+    // Função para CARREGAR os hóspedes do arquivo quando o programa iniciar
+void carregarHospedes() {
+    // Abre o arquivo no modo "rb" (Read Binary - Leitura Binária)
+    FILE *arquivo = fopen("hospedes.dat", "rb"); 
+    
+    if (arquivo != NULL) {
+        // Lê os dados do arquivo e joga direto para o vetor 'hosped'
+        // A função fread retorna a quantidade de itens que ela conseguiu ler
+        totalHospedes = fread(hosped, sizeof(hospede), 20, arquivo);
+        fclose(arquivo);
+        printf("\n[SISTEMA] %d hospede(s) carregado(s) do banco de dados com sucesso!\n", totalHospedes);
+    } else {
+        // Se o arquivo não existir (primeira vez rodando), ele apenas avisa
+        printf("\n[SISTEMA] Nenhum banco de dados de hospedes encontrado. Um novo sera criado ao cadastrar.\n");
+    }
+}
+
 // ========== FUNÇÕES DA RECEPÇÃO ==========
 
+// Função para validar o formato do CPF (XXX.XXX.XXX-XX)
+int validarCPF(char *cpf)
+{
+    if (strlen(cpf) != 14)
+        return 0; // Verifica o tamanho exato
+    if (cpf[3] != '.' || cpf[7] != '.' || cpf[11] != '-')
+        return 0; // Verifica os pontos e traço
+
+    // Verifica se os outros caracteres são números
+    for (int i = 0; i < 14; i++)
+    {
+        if (i != 3 && i != 7 && i != 11)
+        {
+            if (!isdigit(cpf[i]))
+                return 0;
+        }
+    }
+    return 1; // CPF válido no formato
+}
+
+// Função para validar formato da data (exige as barras no formato DD/MM/AAAA)
+int validarDataNascimento(char *data)
+{
+    // Verifica se tem exatos 10 caracteres
+    if (strlen(data) != 10)
+        return 0;
+
+    // Verifica se as barras estão nas posições corretas
+    if (data[2] != '/' || data[5] != '/')
+        return 0;
+
+    return 1; // Tem as barras e o tamanho certo
+}
+
 // FUNÇÃO DE CADASTRO DE HOSPEDES
-void cadastroDeHospedes() {
+void cadastroDeHospedes()
+{
     int adicionarNovoHospede;
-    do {
-        if (totalHospedes >= 20) {
+    do
+    {
+        if (totalHospedes >= 20)
+        {
             printf("Limite de hospedes atingido!\n");
             break;
         }
-        
+
         printf("\nCadastro de Hospedes selecionado.\n");
+
         printf("\nInsira o nome do hospede: ");
         scanf(" %60[^\n]", hosped[totalHospedes].nome);
-        printf("\nInsira a data de nascimento: ");
-        scanf("%s", hosped[totalHospedes].dataDeNascimento);
-        printf("\nInsira o CPF: ");
-        scanf("%s", hosped[totalHospedes].cpf);
+
+        // VALIDAÇÃO DA DATA DE NASCIMENTO
+        int dataValida = 0;
+        do
+        {
+            printf("\nInsira a data de nascimento (DD/MM/AAAA): ");
+            scanf("%s", hosped[totalHospedes].dataDeNascimento);
+
+            if (validarDataNascimento(hosped[totalHospedes].dataDeNascimento))
+            {
+                dataValida = 1;
+            }
+            else
+            {
+                printf("Erro: Formato inválido. Não esqueça de usar as barras (Ex: 01/01/2000).\n");
+            }
+        } while (!dataValida);
+
+        // VALIDAÇÃO DO CPF
+        int cpfValido = 0;
+        do
+        {
+            printf("\nInsira o CPF (Formato: XXX.XXX.XXX-XX): ");
+            scanf("%s", hosped[totalHospedes].cpf);
+
+            if (validarCPF(hosped[totalHospedes].cpf))
+            {
+                cpfValido = 1;
+            }
+            else
+            {
+                printf("Erro: CPF Inválido. Não esqueça dos pontos e do traço!\n");
+            }
+        } while (!cpfValido);
 
         totalHospedes++;
+        
+        // SALVA OS DADOS NO ARQUIVO LOGO APÓS O CADASTRO!
+        salvarHospedes();
 
         printf("\nDeseja adicionar outro hospede? Sim (1) / Nao (2): ");
         scanf("%d", &adicionarNovoHospede);
@@ -229,22 +339,52 @@ void controleDeQuartos()
     if (opcao == 1)
     {
         listarQuartos();
-        }
+    }
     else if (opcao == 2)
     {
-    
     }
     else if (opcao == 3)
-    { atualizarStatusQuarto();
+    {
+        atualizarStatusQuarto();
     }
-        else
-        {
-            printf("Quarto invalido.\n");
-        }
+    else
+    {
+        printf("Quarto invalido.\n");
     }
+}
 
-// FUNÇÃO DE VERIFICAR RESERVAS FEITAS
+// Função para validar se a data está no formato DD/MM/AAAA e é igual ou maior que hoje
+int validarDataFutura(char *data)
+{
+    if (strlen(data) != 10)
+        return 0;
+    if (data[2] != '/' || data[5] != '/')
+        return 0;
 
+    int dia, mes, ano;
+    if (sscanf(data, "%d/%d/%d", &dia, &mes, &ano) != 3)
+        return 0;
+
+    // Pega a data atual do computador
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    int diaAtual = tm.tm_mday;
+    int mesAtual = tm.tm_mon + 1;
+    int anoAtual = tm.tm_year + 1900;
+
+    // Lógica para saber se a data é igual ou posterior a hoje
+    if (ano > anoAtual)
+        return 1;
+    if (ano == anoAtual && mes > mesAtual)
+        return 1;
+    if (ano == anoAtual && mes == mesAtual && dia >= diaAtual)
+        return 1;
+
+    return 0; // Retorna 0 se a data for no passado ou inválida
+}
+
+// FUNÇÃO DE FAZER RESERVA
+// FUNÇÃO DE FAZER RESERVA
 void fazerReserva()
 {
     if (totalreservas >= 50)
@@ -252,27 +392,75 @@ void fazerReserva()
         printf("Limite de reservas atingido!\n");
         return;
     }
+    
     reserva nova;
     nova.idReserva = totalreservas + 1;
     printf("\n--- NOVA RESERVA ---\n");
-    printf("CPF do hospede: ");
-    scanf("%s", nova.cpfHospede);
-    // Verifica se o CPF existe em hosped[] (opcional)
-    printf("Numero do quarto desejado: ");
+    
+    // VALIDAÇÃO DO CPF (Exige pontos e traço)
+    int cpfValido = 0;
+    do {
+        printf("CPF do hospede (XXX.XXX.XXX-XX): ");
+        scanf("%s", nova.cpfHospede);
+        
+        if (validarCPF(nova.cpfHospede)) {
+            cpfValido = 1;
+        } else {
+            printf("Erro: CPF Invalido. Nao esqueca dos pontos e do traco!\n");
+        }
+    } while (!cpfValido);
+
+    // VERIFICAÇÃO SE O HÓSPEDE EXISTE NO SISTEMA
+    int hospedeCadastrado = 0;
+    for (int i = 0; i < totalHospedes; i++) {
+        if (strcmp(hosped[i].cpf, nova.cpfHospede) == 0) {
+            hospedeCadastrado = 1; 
+            printf("Hospede %s encontrado!\n", hosped[i].nome);
+            break; 
+        }
+    }
+
+    if (hospedeCadastrado == 0) {
+        printf("Erro: Hospede nao encontrado! Por favor, cadastre o hospede antes de fazer a reserva.\n");
+        return; 
+    }
+
+    // =======================================================
+    // NOVIDADE: SELEÇÃO DO QUARTO E VERIFICAÇÃO DE DISPONIBILIDADE
+    // =======================================================
+    printf("\nNumero do quarto desejado: ");
     scanf("%d", &nova.numeroQuarto);
-    if (nova.numeroQuarto < 1 || nova.numeroQuarto > 30 || strcmp(quartos[nova.numeroQuarto - 1].status, "OCUPADO") == 0)
+    
+    // Bloqueia se o número for inválido ou se o status for DIFERENTE (!= 0) de DISPONIVEL
+    if (nova.numeroQuarto < 1 || nova.numeroQuarto > 30 || strcmp(quartos[nova.numeroQuarto - 1].status, "DISPONIVEL") != 0)
     {
-        printf("Quarto invalido ou ocupado. Reserva nao concluida.\n");
+        // Se cair aqui, mostra pro usuário qual é o status real do quarto
+        printf("Erro: Quarto indisponivel para reserva. Status atual: %s\n", quartos[nova.numeroQuarto - 1].status);
         return;
     }
-    printf("Data de check-in (DD/MM/AAAA): ");
-    scanf("%s", nova.dataCheckIn);
+    // =======================================================
+    
+    // VALIDAÇÃO DA DATA DE CHECK-IN (Exige barras e data >= hoje)
+    int dataInValida = 0;
+    do {
+        printf("Data de check-in (DD/MM/AAAA) [Atual ou Futura]: ");
+        scanf("%s", nova.dataCheckIn);
+        
+        if (validarDataFutura(nova.dataCheckIn)) {
+            dataInValida = 1;
+        } else {
+            printf("Erro: Formato invalido ou data no passado. Use DD/MM/AAAA e digite uma data valida.\n");
+        }
+    } while (!dataInValida);
+
     printf("Data de check-out (DD/MM/AAAA): ");
     scanf("%s", nova.dataCheckOut);
+    
     nova.status = 0; // reservado
     reservas[totalreservas] = nova;
     totalreservas++;
-    printf("Reserva criada com sucesso! ID: %d\n", nova.idReserva);
+    
+    printf("\nReserva criada com sucesso! ID: %d\n", nova.idReserva);
 }
 
 // FUNÇÃO DE VERIFICAR RESERVAS FEITAS
@@ -304,10 +492,28 @@ void fazerCheckIn()
     char cpf[20];
     int idReserva;
     printf("\n--- CHECK-IN ---\n");
-    printf("Digite o CPF do hospede: ");
-    scanf("%s", cpf);
+
+    // VALIDAÇÃO DO CPF
+        int cpfValido = 0;
+        do
+        {
+            printf("\nInsira o CPF (Formato: XXX.XXX.XXX-XX): ");
+            scanf("%s", cpf);
+
+            if (validarCPF(cpf))
+            {
+                cpfValido = 1;
+            }
+            else
+            {
+                printf("Erro: CPF Inválido. Não esqueça dos pontos e do traço!\n");
+            }
+        } while (!cpfValido);
+
+
     printf("Digite o ID da reserva: ");
     scanf("%d", &idReserva);
+
 
     for (int i = 0; i < totalreservas; i++)
     {
@@ -381,25 +587,29 @@ void listarQuartos()
         char *cor = "\033[0m"; // Começa com a cor padrão (reset)
 
         // Verifica qual é o status para definir a cor correta
-        if (strcmp(quartos[i].status, "DISPONIVEL") == 0) {
+        if (strcmp(quartos[i].status, "DISPONIVEL") == 0)
+        {
             cor = "\033[32m"; // Verde
-        } 
-        else if (strcmp(quartos[i].status, "OCUPADO") == 0) {
+        }
+        else if (strcmp(quartos[i].status, "OCUPADO") == 0)
+        {
             cor = "\033[31m"; // Vermelho
-        } 
-        else if (strcmp(quartos[i].status, "EM MANUTENÇÃO") == 0) {
+        }
+        else if (strcmp(quartos[i].status, "EM MANUTENÇÃO") == 0)
+        {
             cor = "\033[34m"; // Azul
-        } 
-        else if (strcmp(quartos[i].status, "EM LIMPEZA") == 0) {
+        }
+        else if (strcmp(quartos[i].status, "EM LIMPEZA") == 0)
+        {
             cor = "\033[33m"; // Amarelo
         }
 
         // O %s antes do status injeta a cor, e o \033[0m no final reseta a cor do terminal
         printf("Quarto %d - %s - %s%s\033[0m\n",
-            quartos[i].numero,
-            quartos[i].tipo,
-            cor,
-            quartos[i].status);
+               quartos[i].numero,
+               quartos[i].tipo,
+               cor,
+               quartos[i].status);
     }
 }
 
@@ -638,14 +848,18 @@ void menuHospede()
 int main()
 {
     SetConsoleOutputCP(65001); // Essa função é para configurar o console para usar a codificação UTF-8
+    
+    // Chamando a função para carregar os hóspedes do arquivo quando o programa iniciar, para que os dados sejam persistidos mesmo após fechar o programa
+    carregarHospedes();
 
     // Chamando a função para inicializar os quartos do hotel, para que eles já estejam prontos para serem usados quando o usuário fizer login
     iniciarQuartos();
-    
+
     // Puxando a função do SISTEMA DE LOGIN para o início do programa, para que o usuário seja direcionado para a tela de login assim que abrir o programa
     sistemaDeLogin();
 
-    while(1) {
+    while (1)
+    {
         sistemaDeLogin(); // Loop infinito mantendo o programa vivo
     }
 
