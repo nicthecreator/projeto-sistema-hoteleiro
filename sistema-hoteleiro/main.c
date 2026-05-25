@@ -134,7 +134,8 @@ void sistemaDeLogin()
             }
             else
             {
-                printf("Acesso bloqueado por seguranca!\n");
+                printf("Acesso bloqueado por seguranca! Encerrando o Sistema...\n");
+                exit(0);
             }
         }
     }
@@ -316,10 +317,12 @@ void verificarHospedesCadastrados()
         }
         else
         {
+            printf("\nTotal de hospedes cadastrados: %d\n", totalHospedes);
             printf("Fim da lista de hospedes cadastrados.\n");
             break; // Sai do loop se encontrar uma posição vazia, assumindo que os hóspedes são cadastrados sequencialmente
         }
     }
+    
 }
 
 // FUNÇÃO DE CONTROLE DE QUARTOS
@@ -574,34 +577,6 @@ void fazerCheckOut()
 
 // ========== FUNÇÕES DA ADMINISTRAÇÃO ==========
 
-// FUNÇÃO PARA GERAR RELATÓRIO DE HÓSPEDES
-
-void relatorioHospedes()
-{
-    printf("\n====================================");
-    printf("\n===== RELATORIO DE HOSPEDES =======");
-    printf("\n====================================\n");
-
-    // Verifica se existe hóspede cadastrado
-    if (totalHospedes == 0)
-    {
-        printf("\nNenhum hospede cadastrado.\n");
-        return;
-    }
-
-    // Percorre o vetor de hóspedes
-    for (int i = 0; i < totalHospedes; i++)
-    {
-        printf("\nHOSPEDE %d", i + 1);
-        printf("\nNome: %s", hosped[i].nome);
-        printf("\nData de Nascimento: %s", hosped[i].dataDeNascimento);
-        printf("\nCPF: %s", hosped[i].cpf);
-
-        printf("\n------------------------------------");
-    }
-
-    printf("\nTotal de hospedes cadastrados: %d\n", totalHospedes);
-}
 
 // FUNÇÃO PARA BUSCAR HÓSPEDE POR CPF
 
@@ -864,7 +839,7 @@ void menuAdministrador()
         switch (opcao)
         {
         case 1:
-            relatorioHospedes();
+            verificarHospedesCadastrados();
             break;
 
         case 2:
