@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> // Essa biblioteca serve para usar os structs e manipulação de strings
+#include <string.h>
 #include <windows.h>
 #include <ctype.h>
-#include <time.h> // Para capturar a data atual
+#include <time.h>
 
 // DECLARAÇÃO GLOBAL
+
 int totalreservas = 0;
 int totalHospedes = 0;
 
@@ -16,7 +17,7 @@ typedef struct
     char login[30];
     char senha[30];
 } pessoa;
-pessoa p[5]; // diminuindo o nome da struct para "p" e o "[1]" é o máximo de pessoas com logins e senhas
+pessoa p[5];
 
 // STRUCT DE HOSPEDES
 
@@ -47,7 +48,7 @@ typedef struct
     int numeroQuarto;
     char dataCheckIn[11];
     char dataCheckOut[11];
-    int status; // 0 = reservado, 1 = check‑in feito, 2 = check‑out feito
+    int status; 
 } reserva;
 reserva reservas[50];
 
@@ -139,7 +140,6 @@ void sistemaDeLogin()
     }
 }
 
-// Inicializa os quartos com números, tipos e preços
 // FUNÇÃO PARA INICIALIZAR OS QUARTOS
 
 void iniciarQuartos()
@@ -451,7 +451,7 @@ void fazerReserva()
         } else {
             printf("Erro: Formato invalido ou data no passado. Use DD/MM/AAAA e digite uma data valida.\n");
         }
-    } while (!dataInValida);
+    } while (!dataInValida);    
 
     printf("Data de check-out (DD/MM/AAAA): ");
     scanf("%s", nova.dataCheckOut);
@@ -574,6 +574,126 @@ void fazerCheckOut()
 
 // ========== FUNÇÕES DA ADMINISTRAÇÃO ==========
 
+// FUNÇÃO PARA GERAR RELATÓRIO DE HÓSPEDES
+
+void relatorioHospedes()
+{
+    printf("\n====================================");
+    printf("\n===== RELATORIO DE HOSPEDES =======");
+    printf("\n====================================\n");
+
+    // Verifica se existe hóspede cadastrado
+    if (totalHospedes == 0)
+    {
+        printf("\nNenhum hospede cadastrado.\n");
+        return;
+    }
+
+    // Percorre o vetor de hóspedes
+    for (int i = 0; i < totalHospedes; i++)
+    {
+        printf("\nHOSPEDE %d", i + 1);
+        printf("\nNome: %s", hosped[i].nome);
+        printf("\nData de Nascimento: %s", hosped[i].dataDeNascimento);
+        printf("\nCPF: %s", hosped[i].cpf);
+
+        printf("\n------------------------------------");
+    }
+
+    printf("\nTotal de hospedes cadastrados: %d\n", totalHospedes);
+}
+
+// FUNÇÃO PARA BUSCAR HÓSPEDE POR CPF
+
+void buscarHospedeCPF()
+{
+    char cpfBusca[20];
+
+    // Variável para saber se encontrou o hóspede
+    int encontrado = 0;
+
+    printf("\n====================================");
+    printf("\n====== BUSCAR HOSPEDE POR CPF ======");
+    printf("\n====================================");
+
+    printf("\nDigite o CPF do hospede: ");
+    scanf("%s", cpfBusca);
+
+    // Percorre todos os hóspedes cadastrados
+    for (int i = 0; i < totalHospedes; i++)
+    {
+        // Compara o CPF digitado com o CPF salvo
+        if (strcmp(hosped[i].cpf, cpfBusca) == 0)
+        {
+            printf("\n\n===== HOSPEDE ENCONTRADO =====");
+
+            printf("\nNome: %s", hosped[i].nome);
+            printf("\nData de Nascimento: %s", hosped[i].dataDeNascimento);
+            printf("\nCPF: %s\n", hosped[i].cpf);
+
+            encontrado = 1;
+
+            break;
+        }
+    }
+
+    // Caso não encontre
+    if (encontrado == 0)
+    {
+        printf("\nHospede nao encontrado.\n");
+    }
+}
+
+// FUNÇÃO PARA REMOVER HÓSPEDE
+
+void removerHospede()
+{
+    char cpfRemover[20];
+
+    // Variável de controle
+    int encontrado = 0;
+
+    printf("\n====================================");
+    printf("\n========= REMOVER HOSPEDE ==========");
+    printf("\n====================================");
+
+    printf("\nDigite o CPF do hospede: ");
+    scanf("%s", cpfRemover);
+
+    // Procura o hóspede
+    for (int i = 0; i < totalHospedes; i++)
+    {
+        // Se encontrar o CPF
+        if (strcmp(hosped[i].cpf, cpfRemover) == 0)
+        {
+            encontrado = 1;
+
+            // Move os próximos hóspedes para trás
+            for (int j = i; j < totalHospedes - 1; j++)
+            {
+                hosped[j] = hosped[j + 1];
+            }
+
+            // Diminui a quantidade de hóspedes
+            totalHospedes--;
+
+            // Salva no arquivo atualizado
+            salvarHospedes();
+
+            printf("\nHospede removido com sucesso!\n");
+
+            break;
+        }
+    }
+
+    // Caso não encontre
+    if (encontrado == 0)
+    {
+        printf("\nHospede nao encontrado.\n");
+    }
+}
+
+
 // ========== FUNÇÕES DA AUXILIAR DE LIMPEZA ==========
 
 // FUNÇÃO PARA LISTAR QUARTOS
@@ -606,10 +726,10 @@ void listarQuartos()
 
         // O %s antes do status injeta a cor, e o \033[0m no final reseta a cor do terminal
         printf("Quarto %d - %s - %s%s\033[0m\n",
-               quartos[i].numero,
-               quartos[i].tipo,
-               cor,
-               quartos[i].status);
+            quartos[i].numero,
+            quartos[i].tipo,
+            cor,
+            quartos[i].status);
     }
 }
 
@@ -735,7 +855,7 @@ void menuAdministrador()
         printf("\n1. Relatorio de Hospedes");
         printf("\n2. Buscar Hospede por CPF");
         printf("\n3. Remover Hospede");
-        printf("\n4. Verificar Hospedes");
+        printf("\n4. Verificar total de Hospedes Cadastrados");
         printf("\n5. Sair");
         printf("\nEscolha uma opcao: ");
 
@@ -744,15 +864,15 @@ void menuAdministrador()
         switch (opcao)
         {
         case 1:
-
+            relatorioHospedes();
             break;
 
         case 2:
-
+            buscarHospedeCPF();
             break;
 
         case 3:
-
+            removerHospede();
             break;
 
         case 4:
@@ -847,8 +967,9 @@ void menuHospede()
 
 int main()
 {
-    SetConsoleOutputCP(65001); // Essa função é para configurar o console para usar a codificação UTF-8
-    
+    // Essa função é para conZigurar o console para usar a codificação UTF-8
+    SetConsoleOutputCP(65001);
+
     // Chamando a função para carregar os hóspedes do arquivo quando o programa iniciar, para que os dados sejam persistidos mesmo após fechar o programa
     carregarHospedes();
 
@@ -860,7 +981,7 @@ int main()
 
     while (1)
     {
-        sistemaDeLogin(); // Loop infinito mantendo o programa vivo
+        sistemaDeLogin(); // Loop infinito pra manter o programa vivo
     }
 
     return 0;
