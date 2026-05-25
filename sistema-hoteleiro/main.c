@@ -168,9 +168,9 @@ void iniciarQuartos()
     }
 }
 
-// FUNÇÕES DE MANIPULAÇÃO DE ARQUIVO (PERSISTÊNCIA)
+// FUNÇÕES PARA SALVAR E CARREGAR DADOS DOS HÓSPEDES, QUARTOS E RESERVAS
 
-    // Função para SALVAR os hóspedes no arquivo
+    // SALVAR E CARREGAR HÓSPEDES
 void salvarHospedes() {
     // Abre (ou cria) um arquivo chamado "hospedes.dat" no modo "wb" (Write Binary - Escrita Binária)
     FILE *arquivo = fopen("hospedes.dat", "wb"); 
@@ -199,6 +199,55 @@ void carregarHospedes() {
     } else {
         // Se o arquivo não existir (primeira vez rodando), ele apenas avisa
         printf("\n[SISTEMA] Nenhum banco de dados de hospedes encontrado. Um novo sera criado ao cadastrar.\n");
+    }
+}
+
+// SALVAR E CARREGAR QUARTOS
+void salvarQuartos() {
+    FILE *arquivo = fopen("quartos.dat", "wb"); 
+    if (arquivo != NULL) {
+        // Salva os 30 quartos de uma vez
+        fwrite(quartos, sizeof(quarto), 30, arquivo);
+        fclose(arquivo);
+    } else {
+        printf("\nErro ao salvar os quartos no disco!\n");
+    }
+}
+
+void carregarQuartos() {
+    FILE *arquivo = fopen("quartos.dat", "rb"); 
+    if (arquivo != NULL) {
+        fread(quartos, sizeof(quarto), 30, arquivo);
+        fclose(arquivo);
+        printf("[SISTEMA] Status dos quartos carregado com sucesso!\n");
+    } else {
+        // Se o arquivo não existir (primeira vez), inicializa e já salva
+        printf("[SISTEMA] Criando novo banco de dados para os quartos.\n");
+        iniciarQuartos(); 
+        salvarQuartos();
+    }
+}
+
+// SALVAR E CARREGAR RESERVAS
+void salvarReservas() {
+    FILE *arquivo = fopen("reservas.dat", "wb"); 
+    if (arquivo != NULL) {
+        // Salva com base no 'totalreservas'
+        fwrite(reservas, sizeof(reserva), totalreservas, arquivo);
+        fclose(arquivo);
+    } else {
+        printf("\nErro ao salvar as reservas no disco!\n");
+    }
+}
+
+void carregarReservas() {
+    FILE *arquivo = fopen("reservas.dat", "rb"); 
+    if (arquivo != NULL) {
+        totalreservas = fread(reservas, sizeof(reserva), 50, arquivo);
+        fclose(arquivo);
+        printf("[SISTEMA] %d reserva(s) carregada(s) com sucesso!\n", totalreservas);
+    } else {
+        printf("[SISTEMA] Nenhum banco de dados de reservas encontrado.\n");
     }
 }
 
@@ -345,6 +394,7 @@ void controleDeQuartos()
     }
     else if (opcao == 2)
     {
+        listarQuartosDisponiveis();
     }
     else if (opcao == 3)
     {
@@ -353,6 +403,34 @@ void controleDeQuartos()
     else
     {
         printf("Quarto invalido.\n");
+    }
+}
+
+// FUNÇÃO PARA LISTAR APENAS QUARTOS DISPONÍVEIS
+void listarQuartosDisponiveis()
+{
+    printf("\n===========================");
+    printf("\n=== QUARTOS DISPONIVEIS ===");
+    printf("\n===========================\n");
+    int encontrou = 0;
+
+    for (int i = 0; i < 30; i++)
+    {
+        // Verifica se o status do quarto é "DISPONIVEL"
+        if (strcmp(quartos[i].status, "DISPONIVEL") == 0)
+        {
+            printf("Quarto %d - %s - \033[32m%s\033[0m\n",
+                quartos[i].numero,
+                quartos[i].tipo,
+                quartos[i].status);
+            encontrou = 1; // Marca que encontrou pelo menos um
+        }
+    }
+
+    // Se o loop rodar inteiro e não achar nada, avisa o usuário
+    if (encontrou == 0)
+    {
+        printf("Nenhum quarto disponivel no momento. O hotel esta lotado!\n");
     }
 }
 
@@ -386,7 +464,6 @@ int validarDataFutura(char *data)
     return 0; // Retorna 0 se a data for no passado ou inválida
 }
 
-// FUNÇÃO DE FAZER RESERVA
 // FUNÇÃO DE FAZER RESERVA
 void fazerReserva()
 {
@@ -428,9 +505,7 @@ void fazerReserva()
         return; 
     }
 
-    // =======================================================
-    // NOVIDADE: SELEÇÃO DO QUARTO E VERIFICAÇÃO DE DISPONIBILIDADE
-    // =======================================================
+    // SELEÇÃO DO QUARTO E VERIFICAÇÃO DE DISPONIBILIDADE
     printf("\nNumero do quarto desejado: ");
     scanf("%d", &nova.numeroQuarto);
     
@@ -441,7 +516,6 @@ void fazerReserva()
         printf("Erro: Quarto indisponivel para reserva. Status atual: %s\n", quartos[nova.numeroQuarto - 1].status);
         return;
     }
-    // =======================================================
     
     // VALIDAÇÃO DA DATA DE CHECK-IN (Exige barras e data >= hoje)
     int dataInValida = 0;
@@ -462,6 +536,7 @@ void fazerReserva()
     nova.status = 0; // reservado
     reservas[totalreservas] = nova;
     totalreservas++;
+    salvarReservas();
     
     printf("\nReserva criada com sucesso! ID: %d\n", nova.idReserva);
 }
@@ -530,6 +605,8 @@ void fazerCheckIn()
             {
                 strcpy(quartos[numQuarto - 1].status, "OCUPADO");
                 reservas[i].status = 1; // check-in realizado
+                salvarQuartos();
+                salvarReservas();
                 printf("Check-in realizado com sucesso! Quarto %d agora esta ocupado.\n", numQuarto);
             }
             else
@@ -567,6 +644,8 @@ void fazerCheckOut()
                 break;
             }
         }
+        salvarQuartos();
+        salvarReservas();
         printf("Check-out realizado. Quarto %d agora esta disponivel.\n", numQuarto);
     }
     else
@@ -587,12 +666,26 @@ void buscarHospedeCPF()
     // Variável para saber se encontrou o hóspede
     int encontrado = 0;
 
-    printf("\n====================================");
-    printf("\n====== BUSCAR HOSPEDE POR CPF ======");
-    printf("\n====================================");
+    printf("\n==============================");
+    printf("\n=== BUSCAR HOSPEDE POR CPF ===");
+    printf("\n==============================");
 
-    printf("\nDigite o CPF do hospede: ");
-    scanf("%s", cpfBusca);
+    // VALIDAÇÃO DO CPF
+        int cpfValido = 0;
+        do
+        {
+            printf("\nInsira o CPF (Formato: XXX.XXX.XXX-XX): ");
+            scanf("%s", cpfBusca);
+
+            if (validarCPF(cpfBusca))
+            {
+                cpfValido = 1;
+            }
+            else
+            {
+                printf("Erro: CPF Inválido. Não esqueça dos pontos e do traço!\n");
+            }
+        } while (!cpfValido);
 
     // Percorre todos os hóspedes cadastrados
     for (int i = 0; i < totalHospedes; i++)
@@ -600,7 +693,7 @@ void buscarHospedeCPF()
         // Compara o CPF digitado com o CPF salvo
         if (strcmp(hosped[i].cpf, cpfBusca) == 0)
         {
-            printf("\n\n===== HOSPEDE ENCONTRADO =====");
+            printf("\n\033[1;32mHospede Encontrado:\033[0m\n");
 
             printf("\nNome: %s", hosped[i].nome);
             printf("\nData de Nascimento: %s", hosped[i].dataDeNascimento);
@@ -615,7 +708,7 @@ void buscarHospedeCPF()
     // Caso não encontre
     if (encontrado == 0)
     {
-        printf("\nHospede nao encontrado.\n");
+        printf("\n\033[1;31mHospede não Encontrado.\033[0m\n");
     }
 }
 
@@ -628,12 +721,26 @@ void removerHospede()
     // Variável de controle
     int encontrado = 0;
 
-    printf("\n====================================");
-    printf("\n========= REMOVER HOSPEDE ==========");
-    printf("\n====================================");
+    printf("\n=======================");
+    printf("\n=== REMOVER HOSPEDE ===");
+    printf("\n=======================");
 
-    printf("\nDigite o CPF do hospede: ");
-    scanf("%s", cpfRemover);
+    // VALIDAÇÃO DO CPF
+    int cpfValido = 0;
+    do
+    {
+        printf("\nDigite o CPF do hospede (Formato: XXX.XXX.XXX-XX): ");
+        scanf("%s", cpfRemover);
+
+        if (validarCPF(cpfRemover))
+        {
+            cpfValido = 1;
+        }
+        else
+        {
+            printf("Erro: CPF Inválido. Não esqueça dos pontos e do traço!\n");
+        }
+    } while (!cpfValido);
 
     // Procura o hóspede
     for (int i = 0; i < totalHospedes; i++)
@@ -655,7 +762,7 @@ void removerHospede()
             // Salva no arquivo atualizado
             salvarHospedes();
 
-            printf("\nHospede removido com sucesso!\n");
+            printf("\n\033[1;32mHospede removido com sucesso!\033[0m\n");
 
             break;
         }
@@ -664,7 +771,7 @@ void removerHospede()
     // Caso não encontre
     if (encontrado == 0)
     {
-        printf("\nHospede nao encontrado.\n");
+        printf("\n\033[1;31mHospede nao encontrado.\033[0m\n");
     }
 }
 
@@ -755,6 +862,7 @@ void atualizarStatusQuarto()
         printf("Opcao invalida.\n");
     }
 
+    salvarQuartos();
     printf("\nStatus atualizado com sucesso!\n");
 }
 
@@ -780,7 +888,7 @@ void menuRecepcionista()
         printf("\n6. Check-in");
         printf("\n7. Check Out");
         printf("\n8. Sair");
-        printf("\nEscolha uma opcao: ");
+        printf("\nEscolha uma opção: ");
         scanf("%d", &opcao);
 
         switch (opcao)
@@ -809,7 +917,7 @@ void menuRecepcionista()
         case 8:
             return;
         default:
-            printf("Numero invalido, tente novamente.\n");
+            printf("Número inválido, tente novamente.\n");
             break;
         }
 
@@ -832,7 +940,7 @@ void menuAdministrador()
         printf("\n3. Remover Hospede");
         printf("\n4. Verificar total de Hospedes Cadastrados");
         printf("\n5. Sair");
-        printf("\nEscolha uma opcao: ");
+        printf("\nEscolha uma opção: ");
 
         scanf("%d", &opcao);
 
@@ -858,7 +966,7 @@ void menuAdministrador()
             return;
 
         default:
-            printf("Numero invalido, tente novamente.\n");
+            printf("Número inválido, tente novamente.\n");
             break;
         }
 
@@ -878,7 +986,7 @@ void menuAuxiliarDeLimpeza()
         printf("1. Listar quartos\n");
         printf("2. Atualizar status do quarto\n");
         printf("3. Sair\n");
-        printf("\nEscolha uma opcao: ");
+        printf("\nEscolha uma opção: ");
 
         scanf("%d", &opcao);
 
@@ -893,7 +1001,7 @@ void menuAuxiliarDeLimpeza()
         case 3:
             return;
         default:
-            printf("Numero invalido, tente novamente.\n");
+            printf("Número inválido, tente novamente.\n");
             break;
         }
     } while (1);
@@ -903,15 +1011,15 @@ void menuAuxiliarDeLimpeza()
 
 void menuHospede()
 {
-    printf("\n=====================================");
-    printf("\n========= PAINEL DO HOSPEDE =========");
-    printf("\n=====================================");
+    printf("\n=========================");
+    printf("\n=== PAINEL DO HOSPEDE ===");
+    printf("\n=========================");
     printf("\n1. Consultar disponibilidade");
     printf("\n2. Realizar Reserva");
     printf("\n3. Realizar Pagamento (Ver boletos emitidos)");
     printf("\n4. Visualizar notas fiscais");
     printf("\n5. Sair");
-    printf("\nEscolha uma opcao: ");
+    printf("\nEscolha uma opção: ");
     int opcao;
 
     scanf("%d", &opcao);
@@ -947,9 +1055,10 @@ int main()
 
     // Chamando a função para carregar os hóspedes do arquivo quando o programa iniciar, para que os dados sejam persistidos mesmo após fechar o programa
     carregarHospedes();
-
-    // Chamando a função para inicializar os quartos do hotel, para que eles já estejam prontos para serem usados quando o usuário fizer login
-    iniciarQuartos();
+    // Chamando a função para carregar os quartos do arquivo quando o programa iniciar, para que o status dos quartos sejam mantidos mesmo após fechar o programa
+    carregarQuartos();
+    // Chamando a função para carregar as reservas do arquivo quando o programa iniciar, para que os dados sejam persistidos mesmo após fechar o programa
+    carregarReservas();
 
     // Puxando a função do SISTEMA DE LOGIN para o início do programa, para que o usuário seja direcionado para a tela de login assim que abrir o programa
     sistemaDeLogin();
