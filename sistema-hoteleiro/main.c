@@ -1027,10 +1027,10 @@ void menuHospede()
     switch (opcao)
     {
     case 1:
-        /* code */
+        listarQuartos();
         break;
     case 2:
-        /* code */
+        fazerReserva();
         break;
     case 3:
         /* code */
