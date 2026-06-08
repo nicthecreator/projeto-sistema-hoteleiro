@@ -9,6 +9,8 @@
 
 int totalreservas = 0;
 int totalHospedes = 0;
+int totalBoletos = 0;
+int totalNotas = 0;
 
 // STRUCT DE LOGIN NO SISTEMA
 
@@ -51,6 +53,67 @@ typedef struct
     int status; 
 } reserva;
 reserva reservas[50];
+
+// STRUCT DE BOLETO
+typedef struct
+{
+    int idBoleto;
+    int idReserva;
+    float valor;
+    char dataVencimento[11];
+    char status[20]; // "PENDENTE", "PAGO", "VENCIDO"
+    char codigoBarras[50];
+} boleto;
+boleto boletos[100];
+
+// STRUCT DE NOTA FISCAL
+typedef struct
+{
+    int idNotaFiscal;
+    int idReserva;
+    char cpfHospede[20];
+    char nomeHospede[60];
+    float valorTotal;
+    char dataEmissao[11];
+    char itens[200];
+} notaFiscal;
+notaFiscal notasFiscais[100];
+
+//==================== PROTOTIPOS ====================
+void sistemaDeLogin();
+void iniciarQuartos();
+void salvarHospedes();
+void carregarHospedes();
+void salvarQuartos();
+void carregarQuartos();
+void salvarReservas();
+void carregarReservas();
+int validarCPF(char *cpf);
+int validarDataNascimento(char *data);
+int validarDataFutura(char *data);
+void cadastroDeHospedes();
+void verificarHospedesCadastrados();
+void controleDeQuartos();
+void listarQuartosDisponiveis();
+void listarQuartos();
+void atualizarStatusQuarto();
+void fazerReserva();
+void verificarReservas();
+void fazerCheckIn();
+void fazerCheckOut();
+void buscarHospedeCPF();
+void removerHospede();
+void menuRecepcionista();
+void menuAdministrador();
+void menuAuxiliarDeLimpeza();
+void menuHospede();
+
+// Novos prototipos
+void gerarBoleto(int idReserva, float valor, char *dataVencimento);
+void realizarPagamento();
+void verBoletosEmitidos();
+void verNotasFiscais();
+void fazerReservaComBoleto();
 
 //==================== FUNÇÕES ====================
 
@@ -248,6 +311,42 @@ void carregarReservas() {
         printf("[SISTEMA] %d reserva(s) carregada(s) com sucesso!\n", totalreservas);
     } else {
         printf("[SISTEMA] Nenhum banco de dados de reservas encontrado.\n");
+    }
+}
+
+// SALVAR E CARREGAR BOLETOS
+void salvarBoletos() {
+    FILE *arquivo = fopen("boletos.dat", "wb");
+    if (arquivo != NULL) {
+        fwrite(boletos, sizeof(boleto), totalBoletos, arquivo);
+        fclose(arquivo);
+    }
+}
+
+void carregarBoletos() {
+    FILE *arquivo = fopen("boletos.dat", "rb");
+    if (arquivo != NULL) {
+        totalBoletos = fread(boletos, sizeof(boleto), 100, arquivo);
+        fclose(arquivo);
+        printf("[SISTEMA] %d boleto(s) carregado(s) com sucesso!\n", totalBoletos);
+    }
+}
+
+// SALVAR E CARREGAR NOTAS FISCAIS
+void salvarNotasFiscais() {
+    FILE *arquivo = fopen("notasfiscais.dat", "wb");
+    if (arquivo != NULL) {
+        fwrite(notasFiscais, sizeof(notaFiscal), totalNotas, arquivo);
+        fclose(arquivo);
+    }
+}
+
+void carregarNotasFiscais() {
+    FILE *arquivo = fopen("notasfiscais.dat", "rb");
+    if (arquivo != NULL) {
+        totalNotas = fread(notasFiscais, sizeof(notaFiscal), 100, arquivo);
+        fclose(arquivo);
+        printf("[SISTEMA] %d nota(s) fiscal(is) carregada(s) com sucesso!\n", totalNotas);
     }
 }
 
@@ -866,6 +965,327 @@ void atualizarStatusQuarto()
     printf("\nStatus atualizado com sucesso!\n");
 }
 
+// ========== FUNÇÃO PARA GERAR BOLETO ==========
+
+void gerarBoleto(int idReserva, float valor, char *dataVencimento) {
+    if (totalBoletos >= 100) {
+        printf("Limite de boletos atingido!\n");
+        return;
+    }
+    
+    boleto novoBoleto;
+    novoBoleto.idBoleto = totalBoletos + 1;
+    novoBoleto.idReserva = idReserva;
+    novoBoleto.valor = valor;
+    strcpy(novoBoleto.dataVencimento, dataVencimento);
+    strcpy(novoBoleto.status, "PENDENTE");
+    
+    // Gera um código de barras fictício
+    sprintf(novoBoleto.codigoBarras, "34191.79001 01043.510047 91020.150008 7 81970000015000");
+    
+    boletos[totalBoletos] = novoBoleto;
+    totalBoletos++;
+    salvarBoletos();
+    
+    printf("\nBoleto gerado com sucesso!\n");
+    printf("ID do Boleto: %d\n", novoBoleto.idBoleto);
+    printf("Valor: R$ %.2f\n", valor);
+    printf("Vencimento: %s\n", dataVencimento);
+    printf("Codigo de Barras: %s\n", novoBoleto.codigoBarras);
+}
+
+// ========== FUNÇÃO PARA REALIZAR PAGAMENTO ==========
+
+void realizarPagamento() {
+    char cpfHospede[20];
+    int idBoleto;
+    int encontrou = 0;
+    
+    printf("\n===================================");
+    printf("\n=== REALIZAR PAGAMENTO ===");
+    printf("\n===================================\n");
+    
+    // Validação do CPF
+    int cpfValido = 0;
+    do {
+        printf("Digite seu CPF (XXX.XXX.XXX-XX): ");
+        scanf("%s", cpfHospede);
+        
+        if (validarCPF(cpfHospede)) {
+            cpfValido = 1;
+        } else {
+            printf("Erro: CPF Invalido. Use o formato correto!\n");
+        }
+    } while (!cpfValido);
+    
+    // Lista boletos pendentes do hóspede
+    printf("\n--- BOLETOS PENDENTES ---\n");
+    for (int i = 0; i < totalBoletos; i++) {
+        // Verifica se o boleto pertence ao hóspede (precisa associar pela reserva)
+        for (int j = 0; j < totalreservas; j++) {
+            if (reservas[j].idReserva == boletos[i].idReserva && 
+                strcmp(reservas[j].cpfHospede, cpfHospede) == 0 &&
+                strcmp(boletos[i].status, "PENDENTE") == 0) {
+                
+                printf("\nID Boleto: %d\n", boletos[i].idBoleto);
+                printf("Valor: R$ %.2f\n", boletos[i].valor);
+                printf("Vencimento: %s\n", boletos[i].dataVencimento);
+                printf("Status: %s\n", boletos[i].status);
+                printf("------------------------\n");
+                encontrou = 1;
+            }
+        }
+    }
+    
+    if (!encontrou) {
+        printf("Nenhum boleto pendente encontrado para este CPF.\n");
+        return;
+    }
+    
+    // Solicita o ID do boleto para pagamento
+    printf("\nDigite o ID do boleto que deseja pagar: ");
+    scanf("%d", &idBoleto);
+    
+    // Processa o pagamento
+    for (int i = 0; i < totalBoletos; i++) {
+        if (boletos[i].idBoleto == idBoleto && strcmp(boletos[i].status, "PENDENTE") == 0) {
+            strcpy(boletos[i].status, "PAGO");
+            
+            // Gera nota fiscal automaticamente após o pagamento
+            for (int j = 0; j < totalreservas; j++) {
+                if (reservas[j].idReserva == boletos[i].idReserva) {
+                    // Encontra o nome do hóspede
+                    char nomeHospede[60] = "";
+                    for (int k = 0; k < totalHospedes; k++) {
+                        if (strcmp(hosped[k].cpf, reservas[j].cpfHospede) == 0) {
+                            strcpy(nomeHospede, hosped[k].nome);
+                            break;
+                        }
+                    }
+                    
+                    // Gera a nota fiscal
+                    notaFiscal nf;
+                    nf.idNotaFiscal = totalNotas + 1;
+                    nf.idReserva = reservas[j].idReserva;
+                    strcpy(nf.cpfHospede, reservas[j].cpfHospede);
+                    strcpy(nf.nomeHospede, nomeHospede);
+                    nf.valorTotal = boletos[i].valor;
+                    
+                    // Pega data atual para emissão
+                    time_t t = time(NULL);
+                    struct tm tm = *localtime(&t);
+                    sprintf(nf.dataEmissao, "%02d/%02d/%d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+                    
+                    // Cria descrição dos itens
+                    sprintf(nf.itens, "Estadia - Quarto %d - Check-in: %s ate %s", 
+                            reservas[j].numeroQuarto, reservas[j].dataCheckIn, reservas[j].dataCheckOut);
+                    
+                    notasFiscais[totalNotas] = nf;
+                    totalNotas++;
+                    salvarNotasFiscais();
+                    
+                    printf("\nPagamento realizado com sucesso!\n");
+                    printf("Nota fiscal gerada automaticamente. ID da NF: %d\n", nf.idNotaFiscal);
+                    break;
+                }
+            }
+            
+            salvarBoletos();
+            return;
+        }
+    }
+    
+    printf("\nBoleto nao encontrado ou ja foi pago!\n");
+}
+
+// ========== FUNÇÃO PARA VER BOLETOS EMITIDOS ==========
+
+void verBoletosEmitidos() {
+    char cpfHospede[20];
+    int encontrou = 0;
+    
+    printf("\n===================================");
+    printf("\n=== BOLETOS EMITIDOS ===");
+    printf("\n===================================\n");
+    
+    // Validação do CPF
+    int cpfValido = 0;
+    do {
+        printf("Digite seu CPF (XXX.XXX.XXX-XX): ");
+        scanf("%s", cpfHospede);
+        
+        if (validarCPF(cpfHospede)) {
+            cpfValido = 1;
+        } else {
+            printf("Erro: CPF Invalido. Use o formato correto!\n");
+        }
+    } while (!cpfValido);
+    
+    printf("\n--- HISTORICO DE BOLETOS ---\n");
+    for (int i = 0; i < totalBoletos; i++) {
+        for (int j = 0; j < totalreservas; j++) {
+            if (reservas[j].idReserva == boletos[i].idReserva && 
+                strcmp(reservas[j].cpfHospede, cpfHospede) == 0) {
+                
+                printf("\nBOLETO #%d\n", boletos[i].idBoleto);
+                printf("Valor: R$ %.2f\n", boletos[i].valor);
+                printf("Vencimento: %s\n", boletos[i].dataVencimento);
+                printf("Status: ");
+                
+                // Texto diferente para cada status
+                if (strcmp(boletos[i].status, "PAGO") == 0) {
+                    printf("%s\n", boletos[i].status);
+                } else if (strcmp(boletos[i].status, "VENCIDO") == 0) {
+                    printf("%s\n", boletos[i].status);
+                } else {
+                    printf("%s\n", boletos[i].status);
+                }
+                
+                printf("Codigo de Barras: %s\n", boletos[i].codigoBarras);
+                printf("------------------------\n");
+                encontrou = 1;
+            }
+        }
+    }
+    
+    if (!encontrou) {
+        printf("Nenhum boleto encontrado para este CPF.\n");
+    }
+}
+
+// ========== FUNÇÃO PARA VER NOTAS FISCAIS ==========
+
+void verNotasFiscais() {
+    char cpfHospede[20];
+    int encontrou = 0;
+    
+    printf("\n===================================");
+    printf("\n=== NOTAS FISCAIS ===");
+    printf("\n===================================\n");
+    
+    // Validação do CPF
+    int cpfValido = 0;
+    do {
+        printf("Digite seu CPF (XXX.XXX.XXX-XX): ");
+        scanf("%s", cpfHospede);
+        
+        if (validarCPF(cpfHospede)) {
+            cpfValido = 1;
+        } else {
+            printf("Erro: CPF Invalido. Use o formato correto!\n");
+        }
+    } while (!cpfValido);
+    
+    printf("\n--- NOTAS FISCAIS EMITIDAS ---\n");
+    for (int i = 0; i < totalNotas; i++) {
+        if (strcmp(notasFiscais[i].cpfHospede, cpfHospede) == 0) {
+            printf("\nNOTA FISCAL #%d\n", notasFiscais[i].idNotaFiscal);
+            printf("Data de Emissao: %s\n", notasFiscais[i].dataEmissao);
+            printf("Valor Total: R$ %.2f\n", notasFiscais[i].valorTotal);
+            printf("Itens: %s\n", notasFiscais[i].itens);
+            printf("CNPJ Emissor: 12.345.678/0001-90\n");
+            printf("------------------------\n");
+            encontrou = 1;
+        }
+    }
+    
+    if (!encontrou) {
+        printf("Nenhuma nota fiscal encontrada para este CPF.\n");
+    }
+}
+
+// ========== FUNÇÃO PARA GERAR BOLETO APÓS RESERVA (ATUALIZADA) ==========
+
+void fazerReservaComBoleto() {
+    if (totalreservas >= 50) {
+        printf("Limite de reservas atingido!\n");
+        return;
+    }
+    
+    reserva nova;
+    nova.idReserva = totalreservas + 1;
+    printf("\n--- NOVA RESERVA ---\n");
+    
+    // VALIDAÇÃO DO CPF
+    int cpfValido = 0;
+    do {
+        printf("CPF do hospede (XXX.XXX.XXX-XX): ");
+        scanf("%s", nova.cpfHospede);
+        
+        if (validarCPF(nova.cpfHospede)) {
+            cpfValido = 1;
+        } else {
+            printf("Erro: CPF Invalido. Nao esqueca dos pontos e do traco!\n");
+        }
+    } while (!cpfValido);
+
+    // VERIFICAÇÃO SE O HÓSPEDE EXISTE
+    int hospedeCadastrado = 0;
+    for (int i = 0; i < totalHospedes; i++) {
+        if (strcmp(hosped[i].cpf, nova.cpfHospede) == 0) {
+            hospedeCadastrado = 1; 
+            printf("Hospede %s encontrado!\n", hosped[i].nome);
+            break; 
+        }
+    }
+
+    if (hospedeCadastrado == 0) {
+        printf("Erro: Hospede nao encontrado! Por favor, cadastre o hospede antes de fazer a reserva.\n");
+        return; 
+    }
+
+    // SELEÇÃO DO QUARTO
+    printf("\nNumero do quarto desejado: ");
+    scanf("%d", &nova.numeroQuarto);
+    
+    if (nova.numeroQuarto < 1 || nova.numeroQuarto > 30 || strcmp(quartos[nova.numeroQuarto - 1].status, "DISPONIVEL") != 0) {
+        printf("Erro: Quarto indisponivel para reserva. Status atual: %s\n", quartos[nova.numeroQuarto - 1].status);
+        return;
+    }
+    
+    // DATAS
+    int dataInValida = 0;
+    do {
+        printf("Data de check-in (DD/MM/AAAA) [Atual ou Futura]: ");
+        scanf("%s", nova.dataCheckIn);
+        
+        if (validarDataFutura(nova.dataCheckIn)) {
+            dataInValida = 1;
+        } else {
+            printf("Erro: Formato invalido ou data no passado.\n");
+        }
+    } while (!dataInValida);    
+
+    printf("Data de check-out (DD/MM/AAAA): ");
+    scanf("%s", nova.dataCheckOut);
+    
+    nova.status = 0; // reservado
+    reservas[totalreservas] = nova;
+    totalreservas++;
+    salvarReservas();
+    
+    // CALCULA VALOR DA ESTADIA (exemplo: R$ 100 por dia)
+    float valorDiaria = 100.00;
+    if (strcmp(quartos[nova.numeroQuarto - 1].tipo, "Suite Premium") == 0) {
+        valorDiaria = 250.00;
+    } else if (strcmp(quartos[nova.numeroQuarto - 1].tipo, "Duplo") == 0) {
+        valorDiaria = 150.00;
+    }
+    
+    float valorTotal = valorDiaria; // Simplificado - ideal seria calcular dias
+    
+    // Gera data de vencimento (7 dias após check-in)
+    char dataVencimento[11];
+    // Simplificado: apenas copia a data de check-in + 7 dias
+    strcpy(dataVencimento, nova.dataCheckIn);
+    
+    // Gera o boleto
+    gerarBoleto(nova.idReserva, valorTotal, dataVencimento);
+    
+    printf("\nReserva criada com sucesso! ID: %d\n", nova.idReserva);
+    printf("Boleto gerado no valor de R$ %.2f\n", valorTotal);
+}
+
 // ========== FUNÇÕES DO HÓSPEDE ==========
 
 // ==================== MENUS ====================
@@ -1018,7 +1438,8 @@ void menuHospede()
     printf("\n2. Realizar Reserva");
     printf("\n3. Realizar Pagamento (Ver boletos emitidos)");
     printf("\n4. Visualizar notas fiscais");
-    printf("\n5. Sair");
+    printf("\n5. fazerReservaComBoleto");
+    printf("\n6. Sair");
     printf("\nEscolha uma opção: ");
     int opcao;
 
@@ -1033,12 +1454,15 @@ void menuHospede()
         fazerReserva();
         break;
     case 3:
-        /* code */
+        realizarPagamento();
         break;
     case 4:
-        /* code */
+        verNotasFiscais();
         break;
     case 5:
+        fazerReservaComBoleto();
+        break;
+    case 6:
         return;
 
     default:
@@ -1059,6 +1483,10 @@ int main()
     carregarQuartos();
     // Chamando a função para carregar as reservas do arquivo quando o programa iniciar, para que os dados sejam persistidos mesmo após fechar o programa
     carregarReservas();
+    // Chamando a função para carregar os boletos do arquivo quando o programa inciar, para que os dados sejam persistidos mesmo após fechar o programa
+    carregarBoletos();
+    // Chamando a função para carregar as notas fiscais do arquivo quando o programa iniciar, para que os dados sejam persistidos mesmo após fechar o programa
+    carregarNotasFiscais();
 
     // Puxando a função do SISTEMA DE LOGIN para o início do programa, para que o usuário seja direcionado para a tela de login assim que abrir o programa
     sistemaDeLogin();
