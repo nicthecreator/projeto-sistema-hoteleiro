@@ -1173,7 +1173,7 @@ void verNotasFiscais() {
     int encontrou = 0;
     
     printf("\n===================================");
-    printf("\n=== NOTAS FISCAIS ===");
+    printf("\n========== NOTAS FISCAIS ==========");
     printf("\n===================================\n");
     
     // Validação do CPF
@@ -1350,7 +1350,7 @@ void menuRecepcionista()
             controleDeQuartos();
             break;
         case 4:
-            fazerReserva();
+            fazerReservaComBoleto();
             break;
         case 5:
             verificarReservas();
@@ -1469,8 +1469,7 @@ void menuHospede()
         printf("\n2. Realizar Reserva");
         printf("\n3. Realizar Pagamento (Ver boletos emitidos)");
         printf("\n4. Visualizar notas fiscais");
-        printf("\n5. Fazer Reserva Com Boleto");
-        printf("\n6. Sair");
+        printf("\n5. Sair");
         printf("\nEscolha uma opção: ");
 
         scanf("%d", &opcao);
@@ -1481,7 +1480,7 @@ void menuHospede()
             listarQuartos();
             break;
         case 2:
-            fazerReserva();
+            fazerReservaComBoleto();
             break;
         case 3:
             realizarPagamento();
@@ -1490,11 +1489,7 @@ void menuHospede()
             verNotasFiscais();
             break;
         case 5:
-            fazerReservaComBoleto();
-            break;
-        case 6:
             return;
-
         default:
             printf("Número inválido, tente novamente.\n");
             break;
